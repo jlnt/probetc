@@ -247,7 +247,7 @@ def make_graph(graph_file_base, graph_title, graph_definition, time_window_sec,
         graph_file_name, '--width', '1920', '--height', '1080',
         '--full-size-mode', '--end', 'now', '--start',
         'end-' + str(time_window_sec) + 's', '--step',
-        str(time_window_sec / 240), '--title', graph_title, '--vertical-label',
+        str(time_window_sec // 256), '--title', graph_title, '--vertical-label',
         units, '--lazy', '--font', 'TITLE:18', '--font', 'LEGEND:14', '--font',
         'AXIS:12'
     ]
