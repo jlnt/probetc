@@ -7,6 +7,7 @@
 # pylint: disable=c-extension-no-member,missing-docstring,fixme
 
 import getopt
+import os
 import subprocess
 import sys
 import threading
@@ -244,7 +245,7 @@ def make_graph(graph_file_base, graph_title, graph_definition, time_window_sec,
                units):
     graph_file_name = WORKING_PATH + graph_file_base + ".png"
     init_vars = [
-        graph_file_name, '--width', '1920', '--height', '1080',
+        graph_file_name + '.tmp', '--width', '1920', '--height', '1080',
         '--full-size-mode', '--end', 'now', '--start',
         'end-' + str(time_window_sec) + 's', '--step',
         str(time_window_sec // 256), '--title', graph_title, '--vertical-label',
@@ -261,6 +262,8 @@ def make_graph(graph_file_base, graph_title, graph_definition, time_window_sec,
     #    subprocess.run(init_vars)
 
     rrdtool.graph(*init_vars)
+    # Atomically replace the image.
+    os.rename(graph_file_name + '.tmp', graph_file_name)
 
 
 # pylint: disable=too-many-arguments
