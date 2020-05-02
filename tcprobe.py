@@ -295,7 +295,7 @@ def graph_queues(qdisc_info, iterations):
     time_window_sec = GRAPH_TIMES[0][0]
 
     # Would we update more than ~1% of the graph?
-    if iterations % (time_window_sec // (100 * COLLECTION_STEP)) == 0:
+    if iterations % (time_window_sec // (100 * COLLECTION_STEP)) != 0:
         return
     for qdisc in qdisc_info:
         rrd_file_name = WORKING_PATH + qdisc['name'] + ".rrd"
