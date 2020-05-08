@@ -256,12 +256,14 @@ def make_graph(graph_file_base, graph_title, graph_definition, time_window_sec,
 
     # This produces better error messages than the in-process graph() function
     # which just segfaults.
+    # Also the in-process graph() function seems to have leaks and ends up
+    # crashing.
     #
-    #    init_vars.insert(0, "graph")
-    #    init_vars.insert(0, "rrdtool")
-    #    subprocess.run(init_vars)
+    init_vars.insert(0, "graph")
+    init_vars.insert(0, "rrdtool")
+    subprocess.run(init_vars, stdout=subprocess.DEVNULL)
 
-    rrdtool.graph(*init_vars)
+    #rrdtool.graph(*init_vars)
     # Atomically replace the image.
     os.rename(graph_file_name + '.tmp', graph_file_name)
 
