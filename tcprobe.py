@@ -67,6 +67,8 @@ DATA_SOURCES = {
     },
 }
 
+RRD_LOCK = threading.Lock()
+
 
 def write_html_files(qdisc_info):
     with open(WORKING_PATH + 'index.html', 'w') as index_html:
@@ -136,8 +138,8 @@ def write_html_files(qdisc_info):
             time_slice = slice(0, graph_info['max_time_window'])
             for _, period_name in GRAPH_TIMES[time_slice]:
                 file_suffix = '-' + period_name
-                html_img.append(
-                    '<img src="' + data_source + file_suffix + '.png"><br>\n')
+                html_img.append('<img src="' + data_source + file_suffix +
+                                '.png"><br>\n')
 
         html_string += ''.join(html_img)
         html_string += '</body>\n</html>'
@@ -238,7 +240,9 @@ def update_rrd():
         values = ''.join((qdisc_data.sent_packets, ":", qdisc_data.sent_bytes,
                           ':', qdisc_data.dropped, ":", qdisc_data.overlimits,
                           ":", qdisc_data.requeues))
+        RRD_LOCK.acquire()
         rrdtool.update(rrd_file_name, 'N:' + values)
+        RRD_LOCK.release()
 
 
 def make_graph(graph_file_base, graph_title, graph_definition, time_window_sec,
@@ -261,9 +265,12 @@ def make_graph(graph_file_base, graph_title, graph_definition, time_window_sec,
     #
     init_vars.insert(0, "graph")
     init_vars.insert(0, "rrdtool")
-    subprocess.run(init_vars, stdout=subprocess.DEVNULL)
 
+    RRD_LOCK.acquire()
+    subprocess.run(init_vars, stdout=subprocess.DEVNULL, check=True)
     #rrdtool.graph(*init_vars)
+    RRD_LOCK.release()
+
     # Atomically replace the image.
     os.rename(graph_file_name + '.tmp', graph_file_name)
 
@@ -309,9 +316,10 @@ def graph_queues(qdisc_info, iterations):
         # pylint: disable=bad-continuation
         for index, data_source in enumerate(
             ['packets_sent', 'dropped', 'overlimits', 'requeues']):
-            new_def = generate_one_graph_line(
-                rrd_file_name, data_source, data_source, data_source, 'LINE1:',
-                GRAPH_COLOR[index], units)
+            new_def = generate_one_graph_line(rrd_file_name, data_source,
+                                              data_source, data_source,
+                                              'LINE1:', GRAPH_COLOR[index],
+                                              units)
             graph_definition.extend(new_def)
 
         make_graph(qdisc['name'], graph_name, graph_definition, time_window_sec,
