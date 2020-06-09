@@ -212,17 +212,20 @@ def create_rrd(qdisc_info):
     """ Create one RRD database per queue """
     for qdisc in qdisc_info:
         rrd_file_name = WORKING_PATH + qdisc['name'] + ".rrd"
-        # --source tries to re-use the data from an existing database if there is one
         rrdtool.create(
             rrd_file_name,
+            # --source tries to re-use the data from an existing database if there is one
             '--no-overwrite',
             '--step',
             str(COLLECTION_STEP),
-            'DS:packets_sent:COUNTER:10:U:U',
-            'DS:bytes_sent:COUNTER:10:U:U',
-            'DS:dropped:COUNTER:10:U:U',
-            'DS:overlimits:COUNTER:10:U:U',
-            'DS:requeues:COUNTER:10:U:U',
+            # We use DERIVE because we don't need to account for overflows
+            # but counter resets will happen on reboot and during some
+            # tc changes.
+            'DS:packets_sent:DERIVE:10:0:U',
+            'DS:bytes_sent:DERIVE:10:0:U',
+            'DS:dropped:DERIVE:10:0:U',
+            'DS:overlimits:DERIVE:10:0:U',
+            'DS:requeues:DERIVE:10:0:U',
             'RRA:AVERAGE:0.5:1:2h',  # Keep highest precision for 2h
             'RRA:AVERAGE:0.5:30s:2d',
             'RRA:AVERAGE:0.5:5m:1w',
